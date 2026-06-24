@@ -75,11 +75,67 @@ function urlToContentPath(url: string): string {
       color: var(--mat-sys-on-surface);
     }
 
-    .doc-content h1 { font-size: 1.5rem; margin-top: 24px; margin-bottom: 12px; }
-    .doc-content h2 { font-size: 1.25rem; margin-top: 20px; margin-bottom: 10px; }
+    .doc-content h1 { font-size: 1.5rem; font-weight: 700; margin: 24px 0 12px; border-bottom: 1px solid var(--mat-sys-outline-variant); padding-bottom: 8px; }
+    .doc-content h2 { font-size: 1.25rem; font-weight: 600; margin: 20px 0 10px; border-bottom: 1px solid var(--mat-sys-outline-variant); padding-bottom: 6px; }
+    .doc-content h3 { font-size: 1.1rem; font-weight: 600; margin: 16px 0 8px; }
+    .doc-content h4 { font-size: 1rem; font-weight: 600; margin: 12px 0 6px; }
     .doc-content p { margin-bottom: 12px; }
-    .doc-content ul { padding-left: 20px; margin-bottom: 12px; }
-    .doc-content a { color: var(--mat-sys-primary); }
+    .doc-content ul, .doc-content ol { padding-left: 24px; margin-bottom: 12px; }
+    .doc-content li { margin-bottom: 4px; }
+    .doc-content li > ul, .doc-content li > ol { margin-bottom: 0; }
+    .doc-content a { color: var(--mat-sys-primary); text-decoration: underline; text-underline-offset: 2px; }
+    .doc-content a:hover { opacity: 0.8; }
+    .doc-content strong { font-weight: 600; color: var(--mat-sys-on-surface); }
+    .doc-content code {
+      background: var(--mat-sys-surface-container);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.875em;
+      font-family: 'Roboto Mono', 'Courier New', monospace;
+    }
+    .doc-content pre {
+      background: var(--mat-sys-surface-container);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+    .doc-content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+    .doc-content blockquote {
+      margin: 0 0 12px;
+      padding: 8px 16px;
+      border-left: 4px solid var(--mat-sys-primary);
+      background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+      border-radius: 0 8px 8px 0;
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .doc-content blockquote p { margin-bottom: 4px; }
+    .doc-content hr {
+      border: none;
+      border-top: 1px solid var(--mat-sys-outline-variant);
+      margin: 24px 0;
+    }
+    .doc-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .doc-content th, .doc-content td {
+      padding: 8px 12px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      text-align: left;
+    }
+    .doc-content th {
+      background: var(--mat-sys-surface-container);
+      font-weight: 600;
+    }
+    .doc-content img { max-width: 100%; border-radius: 8px; }
 
     .error-text { text-align: center; padding: 48px; color: var(--mat-sys-on-surface-variant); }
 
