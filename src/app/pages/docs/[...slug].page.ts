@@ -1,4 +1,4 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject, signal, ViewEncapsulation } from "@angular/core";
 import { RouterLink, Router, NavigationEnd } from "@angular/router";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
@@ -32,6 +32,7 @@ function urlToContentPath(url: string): string {
 @Component({
   selector: "app-doc",
   imports: [RouterLink, MatButtonModule, MatIconModule, FooterComponent],
+  encapsulation: ViewEncapsulation.None, // 必须关闭，否则 [innerHTML] 不会应用样式
   template: `
     <div class="doc-page">
       @if (error()) {
