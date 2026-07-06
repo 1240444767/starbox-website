@@ -18,7 +18,7 @@ import { SeoService } from "../features/seo/seo.service";
       <mat-card appearance="outlined" class="download-card">
         <mat-card-content>
           <div class="download-section">
-            <a mat-fab extended href="https://wwbsh.lanzout.com/iIBtI3sr5f3c" target="_blank" rel="noopener noreferrer" class="download-primary">
+            <a mat-fab extended href="https://wwbsh.lanzout.com/iuocq3uqvvbi" target="_blank" rel="noopener noreferrer" class="download-primary">
               <mat-icon>download</mat-icon>
               下载最新版本
             </a>
@@ -26,7 +26,7 @@ import { SeoService } from "../features/seo/seo.service";
               <mat-icon>cloud_download</mat-icon>
               备用下载
             </button>
-            <p class="version-info">当前版本: v2.3.0 | 更新日期: 2026-06-23</p>
+            <p class="version-info">当前版本: v2.4.0 | 更新日期: 2026-07-6</p>
           </div>
 
           <div class="requirements">
@@ -310,7 +310,7 @@ export default class DownloadComponent {
   previewImage = signal<string | null>(null);
   private dialog = inject(MatDialog);
 
-  private mainUrl = "https://wwbsh.lanzout.com/iIBtI3sr5f3c";
+  private mainUrl = "https://wwbsh.lanzout.com/iuocq3uqvvbi";
 
   constructor() {
     inject(SeoService).setDownload();
@@ -344,6 +344,22 @@ export default class DownloadComponent {
   ];
 
   changelog = [
+    {
+      version: "StarBox v2.4.0",
+      date: "2026-07-6",
+      items: [
+        "前言:作者大大表示想要一份工作,有工作介绍的联系我. 呜~呜~~呜~",
+        "重点:音乐大全全新设计(功能目前很完善)",
+        "新增 - IloveDPF",
+        "新增 - 证件照制作",
+        "新增 - 音乐桌面歌词",
+        "修复 - 空文件和安装包清理不干净问题",
+        "修复 - 影视播放器新增缓冲功能(减少部分卡顿)",
+        "新增 - 影视播放器外部播放",
+        "优化 - 软件启动速度",
+        "版本:v2.4.0 日期:2026-7-6 作者:Xiao Yang",
+      ],
+    },
     {
       version: "StarBox v2.3.0",
       date: "2026-06-23",
