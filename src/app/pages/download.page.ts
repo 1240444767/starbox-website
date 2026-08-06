@@ -310,7 +310,7 @@ export default class DownloadComponent {
   previewImage = signal<string | null>(null);
   private dialog = inject(MatDialog);
 
-  private mainUrl = "https://wwbsh.lanzout.com/iuocq3uqvvbi";
+  private mainUrl = "https://wwbsh.lanzout.com/i8js940wuphe";
 
   constructor() {
     inject(SeoService).setDownload();
@@ -345,8 +345,8 @@ export default class DownloadComponent {
 
   changelog = [
     {
-      version: "StarBox v2.4.0",
-      date: "2026-07-6",
+      version: "StarBox v2.5.0",
+      date: "2026-08-7",
       items: [
         "前言:作者大大表示想要一份工作,有工作介绍的联系我. 呜~呜~~呜~",
         "重点:音乐大全全新设计(功能目前很完善)",
@@ -358,6 +358,43 @@ export default class DownloadComponent {
         "新增 - 影视播放器外部播放",
         "优化 - 软件启动速度",
         "版本:v2.4.0 日期:2026-7-6 作者:Xiao Yang",
+      ],
+    },{
+      version: "StarBox v2.4.0",
+      date: "2026-07-6",
+      items: [
+        "前言:今天是立秋了,有没有帅哥美女请我喝一杯奶茶呀嘻嘻嘻！(超想喝！！！)",
+        "下载链接  -  https://wwbsh.lanzout.com/i8js940wuphe",
+        "备用链接  -  https://wwbsh.lanzouy.com/i8js940wuphe",
+        "官网更新  -  https://www.istarbox.app",
+        "",
+        "新增 - BMI指数",
+        "新增 - 黄金价格",
+        "新增 - 地震数据",
+        "新增 - 血型遗传查询",
+        "新增 - 梗名生成器",
+        "新增 - 随机弱智吧问答",
+        "新增 - 随机人设",
+        "新增 - 今日诗词",
+        "新增 - 今天吃什么",
+        "新增 - RSS阅读",
+        "新增 - Markdown编辑器",
+        "新增 - PDF阅读",
+        "新增 - 二维码制作",
+        "新增 - QQ头像获取",
+        "新增 - 拼豆图纸",
+        "新增 - 设备温度",
+        "新增 - 反应力测试",
+        "新增 - 隐藏启动设置",
+        "新增 - 开源软件",
+        "",
+        "修复 - 音乐大全全屏在平板或电脑上无法显示的问题",
+        "",
+        "优化 - 多处UI已适配大屏",
+        "优化 - 音乐大全的本地歌单支持批量下载",
+        "优化 - 音乐大全的最近播放支持清除",
+        "",
+        "版本:v2.5.0 日期:2026-8-7 作者:Xiao Yang"
       ],
     },
     {
