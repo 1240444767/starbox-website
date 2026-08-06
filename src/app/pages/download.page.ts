@@ -18,7 +18,7 @@ import { SeoService } from "../features/seo/seo.service";
       <mat-card appearance="outlined" class="download-card">
         <mat-card-content>
           <div class="download-section">
-            <a mat-fab extended href="https://wwbsh.lanzout.com/iuocq3uqvvbi" target="_blank" rel="noopener noreferrer" class="download-primary">
+            <a mat-fab extended href="https://wwbsh.lanzout.com/i8js940wuphe" target="_blank" rel="noopener noreferrer" class="download-primary">
               <mat-icon>download</mat-icon>
               下载最新版本
             </a>
