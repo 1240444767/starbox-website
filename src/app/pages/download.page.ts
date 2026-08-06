@@ -26,7 +26,7 @@ import { SeoService } from "../features/seo/seo.service";
               <mat-icon>cloud_download</mat-icon>
               备用下载
             </button>
-            <p class="version-info">当前版本: v2.4.0 | 更新日期: 2026-07-6</p>
+            <p class="version-info">当前版本: v2.5.0 | 更新日期: 2026-08-7</p>
           </div>
 
           <div class="requirements">
