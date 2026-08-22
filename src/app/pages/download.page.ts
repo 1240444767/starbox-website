@@ -18,7 +18,7 @@ import { SeoService } from "../features/seo/seo.service";
       <mat-card appearance="outlined" class="download-card">
         <mat-card-content>
           <div class="download-section">
-            <a mat-fab extended href="https://wwbsh.lanzout.com/i8js940wuphe" target="_blank" rel="noopener noreferrer" class="download-primary">
+            <a mat-fab extended href="https://wwbsh.lanzout.com/i8Y8z44265qd" target="_blank" rel="noopener noreferrer" class="download-primary">
               <mat-icon>download</mat-icon>
               下载最新版本
             </a>
@@ -26,7 +26,7 @@ import { SeoService } from "../features/seo/seo.service";
               <mat-icon>cloud_download</mat-icon>
               备用下载
             </button>
-            <p class="version-info">当前版本: v2.5.0 | 更新日期: 2026-08-7</p>
+            <p class="version-info">当前版本: v2.6.0 | 更新日期: 2026-08-22</p>
           </div>
 
           <div class="requirements">
@@ -310,7 +310,7 @@ export default class DownloadComponent {
   previewImage = signal<string | null>(null);
   private dialog = inject(MatDialog);
 
-  private mainUrl = "https://wwbsh.lanzout.com/i8js940wuphe";
+  private mainUrl = "https://wwbsh.lanzout.com/i8Y8z44265qd";
 
   constructor() {
     inject(SeoService).setDownload();
@@ -345,6 +345,28 @@ export default class DownloadComponent {
 
   changelog = [
     {
+      version: "StarBox v2.6.0",
+      date: "2026-08-22",
+      items: [
+        "前言:累哦！累哦！咋没人支持投资我啊！",
+        "下载链接 - https://wwbsh.lanzout.com/i8Y8z44265qd",
+        "备用链接 - https://wwbsh.lanzous.com/i8Y8z44265qd",
+        "官网更新 - https://www.istarbox.app",
+        "",
+        "新增 - 应用商店中心",
+        "新增 - QQ音乐",
+        "新增 - 网易云音乐",
+        "新增 - 酷我音乐",
+        "新增视频源 - 55kan7|大米星球|泥视频|叽哔动漫|E-ACG|森之屋动漫|樱花动漫|海星动漫|嘀哩嘀哩",
+        "",
+        "修复 - 影视大全部分播放源卡顿问题",
+        "修复 - 动漫大全图片无法加载的问题",
+        "",
+        "优化 - 多处页面列表流畅处理",
+        "",
+        "版本:v2.6.0 日期:2026-8-22 作者:Xiao Yang"
+      ]
+    },{
       version: "StarBox v2.5.0",
       date: "2026-08-7",
       items: [
