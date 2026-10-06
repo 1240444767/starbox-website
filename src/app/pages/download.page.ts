@@ -1,25 +1,25 @@
 import { Component, computed, inject, signal } from "@angular/core";
-import { MatButtonModule } from "@angular/material/button";
-import { MatCardModule } from "@angular/material/card";
-import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { MatIconModule } from "@angular/material/icon";
-import { MatListModule } from "@angular/material/list";
+import { MatCardModule } from "@angular/material/card";
 import { FooterComponent } from "../features/layout/footer";
 import { SeoService } from "../features/seo/seo.service";
 
-// ─── GitHub 下载（对齐 starbox-website 仓库 Releases）───
+// ─── GitHub 下载（对齐星音乐官网的样式与机制）───
 // APK 挂在本仓库（已公开）的 GitHub Releases 上，releases.json 与之一一对应；
-// 直链 + 多条第三方加速线路，蓝奏云作为备用来源。
+// 直链 + 多条第三方加速线路（pills 切换，localStorage 记住选择），蓝奏云作为网盘备用。
 
 const GITHUB_RELEASES = "https://github.com/1240444767/starbox-website/releases";
 
 /** GitHub 加速线路（只转发链接，不保存文件；默认 GitHub 直连） */
-const GH_MIRRORS: { name: string; prefix: string }[] = [
-  { name: "gh-proxy", prefix: "https://gh-proxy.com/" },
-  { name: "llkk", prefix: "https://gh.llkk.cc/" },
-  { name: "ghfast", prefix: "https://ghfast.top/" },
-  { name: "ghproxy", prefix: "https://ghproxy.net/" },
+const GH_MIRRORS: { id: string; label: string; prefix: string }[] = [
+  { id: "github", label: "GitHub 直连", prefix: "" },
+  { id: "gh-proxy", label: "gh-proxy", prefix: "https://gh-proxy.com/" },
+  { id: "llkk", label: "llkk", prefix: "https://gh.llkk.cc/" },
+  { id: "ghfast", label: "ghfast", prefix: "https://ghfast.top/" },
+  { id: "ghproxy", label: "ghproxy", prefix: "https://ghproxy.net/" },
 ];
+
+const SOURCE_KEY = "starbox-dl-source";
 
 /** releases.json 里的一条版本记录 */
 interface ReleaseEntry {
@@ -33,46 +33,119 @@ interface ReleaseEntry {
   notes: string[];
 }
 
+function readStoredSource(): string {
+  try {
+    return localStorage.getItem(SOURCE_KEY) ?? "github";
+  } catch {
+    return "github";
+  }
+}
+
 @Component({
   selector: "app-download",
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatDialogModule, MatListModule, FooterComponent],
+  imports: [MatIconModule, MatCardModule, FooterComponent],
   template: `
     <div class="download-page">
-      <h1>下载星盒</h1>
-      <p class="subtitle">StarBox 是一款功能强大的全能工具箱，支持 Android 和 Android Pad</p>
+      <header class="center-head">
+        <span class="eyebrow">下载</span>
+        <h1>下载星盒工具箱</h1>
+        <p class="subtitle">
+          APK 直接托管在 GitHub Releases 上，免费下载，不经过任何第三方应用商店。
+        </p>
+      </header>
 
-      <mat-card appearance="outlined" class="download-card">
-        <mat-card-content>
-          <div class="download-section">
-            <a mat-fab extended [href]="primaryUrl()" target="_blank" rel="noopener noreferrer" class="download-primary">
-              <mat-icon>download</mat-icon>
-              下载最新版本
+      <div class="layout">
+        <div class="panel">
+          <div class="brand">
+            <img src="/logo.png" width="72" height="72" alt="星盒工具箱图标" />
+            <div>
+              <h3>星盒工具箱</h3>
+              <p>
+                v{{ latest()?.version ?? "2.7.0" }} · 通用 APK
+                @if (latest()?.size) { · {{ latest()!.size }} }
+              </p>
+            </div>
+          </div>
+
+          <dl class="req">
+            <div>
+              <dt>最新版本</dt>
+              <dd>v{{ latest()?.version ?? "2.7.0" }}</dd>
+            </div>
+            @if (latest()?.size) {
+              <div><dt>文件大小</dt><dd>{{ latest()!.size }}</dd></div>
+            }
+            <div><dt>系统要求</dt><dd>Android 7.0+</dd></div>
+            <div><dt>安装包</dt><dd>通用 APK</dd></div>
+          </dl>
+
+          @if (githubAsset()) {
+            <div class="sources">
+              <span class="src-label">下载线路</span>
+              <div class="pills">
+                @for (s of sources; track s.id) {
+                  <button type="button" class="pill" [class.on]="s.id === sourceId()" (click)="pickSource(s.id)">
+                    {{ s.label }}
+                  </button>
+                }
+              </div>
+              <p class="src-note">加速线路只转发 GitHub 链接、不保存文件；某条不通就换一条或换回直连。</p>
+            </div>
+          }
+
+          @if (lanzouUrl()) {
+            <div class="sources">
+              <span class="src-label">网盘备用</span>
+              <div class="pills">
+                <a class="pill cloud" [href]="lanzouUrl()" target="_blank" rel="noopener noreferrer">
+                  蓝奏云 v{{ latest()?.version ?? "2.7.0" }}
+                </a>
+              </div>
+            </div>
+          }
+
+          <a class="btn" [href]="downloadHref()" target="_blank" rel="noopener noreferrer">
+            下载 APK v{{ latest()?.version ?? "2.7.0" }}
+          </a>
+
+          <div class="links">
+            <a class="ghost" [href]="GITHUB_RELEASES" target="_blank" rel="noopener noreferrer">
+              查看所有版本
             </a>
-            <button mat-stroked-button (click)="openMirrors()" class="download-backup">
-              <mat-icon>cloud_download</mat-icon>
-              备用下载
+            <button class="ghost" type="button" [disabled]="!githubAsset()" (click)="copyLink()">
+              {{ copied() ? "已复制直链" : "复制直链" }}
             </button>
-            <p class="version-info">
-              当前版本: v{{ latest()?.version ?? "2.7.0" }}
-              @if (latest()?.date) { | 更新日期: {{ latest()!.date }} }
-              @if (latest()?.size) { | {{ latest()!.size }} }
-            </p>
-            <p class="host-note">APK 托管在 GitHub Releases，免费直下，另有加速线路与蓝奏云备用。</p>
           </div>
+        </div>
 
-          <div class="requirements">
-            <h3 class="section-title">
-              <mat-icon>devices</mat-icon>
-              系统要求
-            </h3>
-            <ul>
-              <li><strong>Android:</strong> Android 7.0 及以上版本</li>
-              <li><strong>Android Pad:</strong> Android 7.0 及以上版本</li>
-              <li><strong>存储空间:</strong> 建议预留 30MB 以上空间</li>
-            </ul>
-          </div>
-        </mat-card-content>
-      </mat-card>
+        <ol class="steps">
+          <li>
+            <span class="num">1</span>
+            <div>
+              <h4>下载 APK</h4>
+              <p>点击左侧「下载 APK」按钮；国内网络直连 GitHub 较慢时，先在上方换一条加速线路。</p>
+            </div>
+          </li>
+          <li>
+            <span class="num">2</span>
+            <div>
+              <h4>允许安装</h4>
+              <p>首次安装请在系统设置中允许「安装未知来源应用」，或在安装弹窗里授权本应用。</p>
+            </div>
+          </li>
+          <li>
+            <span class="num">3</span>
+            <div>
+              <h4>安装完成</h4>
+              <p>覆盖安装不会丢失数据，打开星盒即可继续使用。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <p class="disclaimer">
+        星盒是一款免费的个人开发工具箱，APK 由官方 GitHub Releases 分发，请勿在第三方渠道付费购买。
+      </p>
 
       <h2 class="screenshots-title">应用截图</h2>
       <div class="screenshot-gallery">
@@ -109,11 +182,11 @@ interface ReleaseEntry {
 
       <h2 class="screenshots-title">更新日志</h2>
       <div class="changelog">
-        @for (release of releases(); track release.version) {
+        @for (release of releases(); track release.version; let i = $index) {
           <div class="changelog-item">
             <h3 class="changelog-version">
               StarBox v{{ release.version }}
-              @if ($index === 0) { <span class="changelog-badge">最新</span> }
+              @if (i === 0) { <span class="changelog-badge">最新</span> }
               <span class="changelog-date">{{ release.date }}</span>
             </h3>
             <ul>
@@ -138,75 +211,271 @@ interface ReleaseEntry {
       padding: 48px 24px;
     }
 
+    .center-head {
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-on-secondary-container);
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+
     h1 {
       font-size: 2rem;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin: 14px 0 8px;
       color: var(--mat-sys-on-surface);
     }
 
     .subtitle {
       font-size: 1rem;
       color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 32px;
-    }
-
-    .download-card {
-      border-radius: 28px;
-      background: var(--mat-sys-surface-container-low);
-      border: none;
-      margin-bottom: 48px;
-    }
-
-    .download-section {
-      text-align: center;
-      padding: 16px 0 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .download-primary {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .download-backup {
-      font-size: 0.875rem;
-    }
-
-    .version-info {
-      color: var(--mat-sys-on-surface-variant);
-      font-size: 0.875rem;
-      margin-top: 8px;
-    }
-
-    .host-note {
-      color: var(--mat-sys-on-surface-variant);
-      font-size: 0.8125rem;
       margin: 0;
     }
 
-    .section-title {
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 44px;
+      align-items: start;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 28px;
+      border-radius: 28px;
+      background: var(--mat-sys-surface-container-low);
+      border: 1px solid var(--mat-sys-outline-variant);
+    }
+
+    .brand {
       display: flex;
       align-items: center;
+      gap: 18px;
+    }
+
+    .brand img {
+      border-radius: 20px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .brand h3 {
+      margin: 0;
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      font-size: 0.875rem;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .req {
+      margin: 0;
+      display: grid;
+      gap: 1px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+    }
+
+    .req > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 11px 16px;
+      background: var(--mat-sys-surface-container);
+      font-size: 0.8438rem;
+    }
+
+    .req dt {
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .req dd {
+      margin: 0;
+      font-weight: 600;
+      text-align: right;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .sources {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .src-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 60%, transparent);
+      background: transparent;
+      color: var(--mat-sys-on-surface-variant);
+      font: inherit;
+      font-size: 0.7813rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--mat-sys-primary);
+      color: var(--mat-sys-primary);
+    }
+
+    .pill.on {
+      background: var(--mat-sys-primary);
+      border-color: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+
+    .pill.cloud {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-color: var(--mat-sys-primary);
+      color: var(--mat-sys-primary);
+      background: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+    }
+
+    .pill.cloud:hover {
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+
+    .src-note {
+      margin: 0;
+      font-size: 0.7813rem;
+      line-height: 1.7;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px 24px;
+      border-radius: 999px;
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 6px 18px color-mix(in srgb, var(--mat-sys-primary) 30%, transparent);
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--mat-sys-primary) 38%, transparent);
+    }
+
+    .links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    .ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      font-size: 0.8438rem;
+      font-weight: 600;
+      color: var(--mat-sys-primary);
+      cursor: pointer;
+    }
+
+    .ghost:hover {
+      text-decoration: underline;
+    }
+
+    .ghost:disabled {
+      opacity: 0.5;
+      cursor: default;
+      text-decoration: none;
+    }
+
+    .steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 16px;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 16px;
+      padding: 20px 22px;
+      border-radius: 20px;
+      background: var(--mat-sys-surface-container-low);
+      border: 1px solid var(--mat-sys-outline-variant);
+    }
+
+    .num {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+      font-size: 0.9375rem;
+      font-weight: 700;
+    }
+
+    .steps h4 {
+      margin: 0;
       font-size: 1rem;
       font-weight: 600;
       color: var(--mat-sys-on-surface);
-      margin-bottom: 12px;
     }
 
-    .requirements {
-      padding: 0 8px;
-    }
-
-    .requirements ul {
+    .steps p {
+      margin: 6px 0 0;
+      font-size: 0.875rem;
+      line-height: 1.65;
       color: var(--mat-sys-on-surface-variant);
-      font-size: 0.9375rem;
-      line-height: 2;
-      padding-left: 20px;
+    }
+
+    .disclaimer {
+      max-width: 780px;
+      margin: 40px auto 0;
+      font-size: 0.8125rem;
+      line-height: 1.7;
+      color: var(--mat-sys-on-surface-variant);
+      text-align: center;
     }
 
     .screenshots-title {
@@ -363,6 +632,12 @@ interface ReleaseEntry {
       text-decoration: underline;
     }
 
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 480px) {
       .download-page {
         padding: 24px 16px;
@@ -376,15 +651,33 @@ interface ReleaseEntry {
 })
 export default class DownloadComponent {
   previewImage = signal<string | null>(null);
-  private dialog = inject(MatDialog);
+
+  protected readonly GITHUB_RELEASES = GITHUB_RELEASES;
+  protected readonly sources = GH_MIRRORS;
 
   /** 全部版本（releases.json，第一条即最新） */
   releases = signal<ReleaseEntry[]>([]);
   /** GitHub 资产直链：最新版有 asset 才有 */
   githubAsset = signal<string | null>(null);
-  /** 蓝奏云兜底（releases.json 里最新版没配 asset/lanzou 时用） */
+  /** 蓝奏云兜底（releases.json 最新版没配 asset 时的主按钮退路） */
   private readonly mainUrl = "https://wwbsh.lanzout.com/i8Y8z44265qd";
-  protected readonly GITHUB_RELEASES = GITHUB_RELEASES;
+
+  protected readonly sourceId = signal(readStoredSource());
+
+  protected readonly copied = signal(false);
+
+  protected readonly lanzouUrl = computed(() => {
+    const lanzou = this.releases()[0]?.lanzou;
+    return lanzou ?? null;
+  });
+
+  /** 当前线路下的下载地址 */
+  protected readonly downloadHref = computed(() => {
+    const asset = this.githubAsset();
+    if (!asset) return this.mainUrl;
+    const source = this.sources.find((s) => s.id === this.sourceId()) ?? this.sources[0];
+    return source.prefix ? source.prefix + asset : asset;
+  });
 
   constructor() {
     inject(SeoService).setDownload();
@@ -409,24 +702,39 @@ export default class DownloadComponent {
     }
   }
 
-  /** 主按钮：GitHub 资产直链优先，没有就退回蓝奏云 */
-  primaryUrl(): string {
-    return this.githubAsset() ?? this.mainUrl;
-  }
-
   latest(): ReleaseEntry | null {
     return this.releases()[0] ?? null;
   }
 
-  openMirrors() {
-    const latest = this.releases()[0];
-    const list: { name: string; url: string }[] = [];
-    if (this.githubAsset()) {
-      GH_MIRRORS.forEach((m) => list.push({ name: m.name, url: m.prefix + this.githubAsset() }));
+  pickSource(id: string) {
+    this.sourceId.set(id);
+    try {
+      localStorage.setItem(SOURCE_KEY, id);
+    } catch {
+      /* 隐私模式下写不了，忽略 */
     }
-    if (latest?.lanzou) list.push({ name: "蓝奏云", url: latest.lanzou });
-    if (list.length === 0) list.push({ name: "蓝奏云", url: this.mainUrl });
-    this.dialog.open(MirrorDialog, { data: list, maxWidth: "560px" });
+  }
+
+  async copyLink() {
+    try {
+      await navigator.clipboard.writeText(this.downloadHref());
+    } catch {
+      const scratch = document.createElement("textarea");
+      scratch.value = this.downloadHref();
+      scratch.setAttribute("readonly", "");
+      scratch.style.position = "fixed";
+      scratch.style.opacity = "0";
+      document.body.appendChild(scratch);
+      scratch.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        /* 复制不了就算了 */
+      }
+      scratch.remove();
+    }
+    this.copied.set(true);
+    window.setTimeout(() => this.copied.set(false), 1600);
   }
 
   screenshots = [
@@ -446,48 +754,6 @@ export default class DownloadComponent {
     { q: "Q: 下载后无法安装？", a: '请检查是否开启了「允许安装未知来源应用」权限，可在设置-安全中开启。' },
     { q: "Q: 应用闪退怎么办？", a: "请尝试清除应用缓存或重新下载安装最新版本。" },
     { q: "Q: 如何更新应用？", a: "打开应用会自动检测更新，也可在此页面下载最新版本覆盖安装。" },
-    { q: "Q: 是否支持 iOS？", a: "目前仅支持 Android 和 Android Pad，iOS 版本正在开发中。" },
+    { q: "Q: GitHub 直连失败？", a: "在「下载线路」里换一条加速线路，或使用「网盘备用」的蓝奏云链接。" },
   ];
-}
-
-@Component({
-  selector: "app-mirror-dialog",
-  imports: [MatButtonModule, MatIconModule, MatDialogModule, MatListModule],
-  template: `
-    <div class="mirror-dialog">
-      <h2 mat-dialog-title>备用下载线路</h2>
-      <mat-dialog-content>
-        <p class="mirror-hint">GitHub 直连不通时按顺序尝试加速线路（只转发链接、不保存文件）；蓝奏云为独立备用源。</p>
-        <mat-nav-list>
-          @for (mirror of mirrors; track mirror.url) {
-            <a mat-list-item [href]="mirror.url" target="_blank" rel="noopener noreferrer" (click)="close()">
-              <mat-icon matListItemIcon>link</mat-icon>
-              <span matListItemTitle>{{ mirror.name }}</span>
-              <span matListItemLine>{{ mirror.url }}</span>
-            </a>
-          }
-        </mat-nav-list>
-      </mat-dialog-content>
-      <mat-dialog-actions align="end">
-        <button mat-button (click)="close()">关闭</button>
-      </mat-dialog-actions>
-    </div>
-  `,
-  styles: `
-    .mirror-dialog { min-width: 420px; }
-    .mirror-hint { font-size: 0.875rem; color: var(--mat-sys-on-surface-variant); margin-bottom: 8px; }
-    mat-nav-list { max-height: 420px; overflow-y: auto; }
-  `,
-})
-export class MirrorDialog {
-  private dialogRef = inject(MatDialogRef);
-  data = inject<{ name: string; url: string }[]>(MAT_DIALOG_DATA);
-
-  get mirrors(): { name: string; url: string }[] {
-    return this.data ?? [];
-  }
-
-  close() {
-    this.dialogRef.close();
-  }
 }
