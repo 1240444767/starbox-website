@@ -111,7 +111,7 @@ function readStoredSource(): string {
           </a>
 
           <div class="links">
-            <a class="ghost" [href]="GITHUB_RELEASES" target="_blank" rel="noopener noreferrer">
+            <a class="ghost" href="#changelog">
               查看所有版本
             </a>
             <button class="ghost" type="button" [disabled]="!directUrl()" (click)="copyLink()">
@@ -182,7 +182,7 @@ function readStoredSource(): string {
         </mat-card-content>
       </mat-card>
 
-      <h2 class="screenshots-title">更新日志</h2>
+      <h2 class="screenshots-title" id="changelog">更新日志</h2>
       <div class="changelog">
         @for (release of releases(); track release.version; let i = $index) {
           <div class="changelog-item">
@@ -199,7 +199,7 @@ function readStoredSource(): string {
           </div>
         }
         <div class="more">
-          <a [href]="GITHUB_RELEASES" target="_blank" rel="noopener noreferrer">在 GitHub 上查看全部版本 →</a>
+          <a [href]="GITHUB_RELEASES" target="_blank" rel="noopener noreferrer">在 GitHub 上查看历史 Release →</a>
         </div>
       </div>
     </div>
