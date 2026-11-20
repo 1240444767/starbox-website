@@ -1,5 +1,5 @@
 {
-  "_readme": "官网的版本列表。每发一个新版本，把这一条复制一份放到数组最前面，改 version / tag / date / asset 或 url / size / notes 即可，页面不用重新写代码。asset 填你在 GitHub Release 里上传的 APK 文件名（Release 建在本仓库 starbox-website 上，仓库已公开、资产可直接下载）；tag 要与 Release 的 tag 完全一致。没有 GitHub Release 时填 url（APK 的完整地址，通常是官网 /download/ 下的文件）。可选 lanzou：该版本单独的蓝奏云分享链接，填了会出现在「网盘备用」里。",
+  "_readme": "官网的版本列表。每发一个新版本，把这一条复制一份放到数组最前面，改 version / tag / date / asset 或 url / size / notes 即可，页面不用重新写代码。asset 填你在 GitHub Release 里上传的 APK 文件名（Release 建在本仓库 starbox-website 上，仓库已公开、资产可直接下载）；tag 要与 Release 的 tag 完全一致。没有 GitHub Release 时填 url（APK 的完整地址，通常是官网 /download/ 下的文件）。可选 lanzou：该版本单独的蓝奏云分享链接，填了会出现在「网盘备用」里。可选 feijipan：小飞机网盘分享链接，填了会展示分享提示与复制文案按钮。",
   "releases": [
     {
       "version": "2.8.0",
@@ -7,6 +7,7 @@
       "date": "2026-11-20",
       "url": "https://www.istarbox.app/download/starbox-2.8.0.apk",
       "size": "76.1 MB",
+      "feijipan": "https://share.feijipan.com/s/qXzl1xcs",
       "notes": [
         "前言:星盒全新重构的大版本，界面、账号、内容模块与播放体验全部换新。",
         "重点:双主题引擎 + 账号会员体系 + 影视/小说/动漫/短剧全面重做",

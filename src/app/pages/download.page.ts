@@ -32,6 +32,8 @@ interface ReleaseEntry {
   url?: string;
   size?: string;
   lanzou?: string;
+  /** 小飞机网盘分享链接 */
+  feijipan?: string;
   notes: string[];
 }
 
@@ -95,14 +97,31 @@ function readStoredSource(): string {
             </div>
           }
 
-          @if (lanzouUrl()) {
+          @if (lanzouUrl() || feijipanUrl()) {
             <div class="sources">
               <span class="src-label">网盘备用</span>
               <div class="pills">
-                <a class="pill cloud" [href]="lanzouUrl()" target="_blank" rel="noopener noreferrer">
-                  蓝奏云 v{{ latest()?.version ?? "2.8.0" }}
-                </a>
+                @if (lanzouUrl()) {
+                  <a class="pill cloud" [href]="lanzouUrl()" target="_blank" rel="noopener noreferrer">
+                    蓝奏云 v{{ latest()?.version ?? "2.8.0" }}
+                  </a>
+                }
+                @if (feijipanUrl()) {
+                  <a class="pill cloud" [href]="feijipanUrl()" target="_blank" rel="noopener noreferrer">
+                    小飞机网盘 v{{ latest()?.version ?? "2.8.0" }}
+                  </a>
+                }
               </div>
+              @if (feijipanUrl()) {
+                <p class="src-note">下载不限速、一键转存无上限、在线播放无损音视频。</p>
+                <p class="src-note">复制这段内容打开「小飞机网盘」APP 即可获取</p>
+                <div class="share-copy">
+                  <a [href]="feijipanUrl()" target="_blank" rel="noopener noreferrer">{{ feijipanUrl() }}</a>
+                  <button class="pill cloud" type="button" (click)="copyFeijipan()">
+                    {{ feijipanCopied() ? "已复制分享文案" : "复制分享文案" }}
+                  </button>
+                </div>
+              }
             </div>
           }
 
@@ -373,6 +392,20 @@ function readStoredSource(): string {
       font-size: 0.7813rem;
       line-height: 1.7;
       color: var(--mat-sys-on-surface-variant);
+    }
+
+    .share-copy {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .share-copy a {
+      font-size: 0.7813rem;
+      color: var(--mat-sys-primary);
+      word-break: break-all;
     }
 
     .btn {
@@ -676,6 +709,10 @@ export default class DownloadComponent {
     return lanzou ?? null;
   });
 
+  protected readonly feijipanUrl = computed(() => this.releases()[0]?.feijipan ?? null);
+
+  protected readonly feijipanCopied = signal(false);
+
   /** 当前线路下的下载地址 */
   protected readonly downloadHref = computed(() => {
     const direct = this.directUrl();
@@ -726,12 +763,12 @@ export default class DownloadComponent {
     }
   }
 
-  async copyLink() {
+  private async writeClipboard(text: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.downloadHref());
+      await navigator.clipboard.writeText(text);
     } catch {
       const scratch = document.createElement("textarea");
-      scratch.value = this.downloadHref();
+      scratch.value = text;
       scratch.setAttribute("readonly", "");
       scratch.style.position = "fixed";
       scratch.style.opacity = "0";
@@ -744,8 +781,20 @@ export default class DownloadComponent {
       }
       scratch.remove();
     }
+  }
+
+  async copyLink() {
+    await this.writeClipboard(this.downloadHref());
     this.copied.set(true);
     window.setTimeout(() => this.copied.set(false), 1600);
+  }
+
+  async copyFeijipan() {
+    const url = this.feijipanUrl();
+    if (!url) return;
+    await this.writeClipboard(`复制这段内容打开「小飞机网盘」APP即可获取\n链接：${url}`);
+    this.feijipanCopied.set(true);
+    window.setTimeout(() => this.feijipanCopied.set(false), 1600);
   }
 
   screenshots = [
