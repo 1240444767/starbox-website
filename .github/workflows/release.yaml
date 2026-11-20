@@ -1,0 +1,38 @@
+name: Release APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/download/*.apk"
+      - ".github/workflows/release.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish latest APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag=$(jq -r '.releases[0].tag' public/releases.json)
+          version=$(jq -r '.releases[0].version' public/releases.json)
+          file="public/download/starbox-${version}.apk"
+          test -f "$file"
+          notes=$(jq -r '.releases[0].notes | join("\n")' public/releases.json)
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$file" --clobber
+          else
+            gh release create "$tag" "$file" \
+              --title "StarBox $tag" \
+              --notes "$notes
+
+          官网下载：https://www.istarbox.app/download"
+          fi
