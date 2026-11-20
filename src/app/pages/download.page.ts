@@ -5,8 +5,8 @@ import { FooterComponent } from "../features/layout/footer";
 import { SeoService } from "../features/seo/seo.service";
 
 // ─── GitHub 下载（对齐星音乐官网的样式与机制）───
-// APK 挂在本仓库（已公开）的 GitHub Releases 上，releases.json 与之一一对应；
-// 直链 + 多条第三方加速线路（pills 切换，localStorage 记住选择），蓝奏云作为网盘备用。
+// 新版本默认托管在 GitHub Releases；没有 Release 资产时用 releases.json 的 url 走官网直链。
+// 有 GitHub 资产时提供多条第三方加速线路（pills 切换，localStorage 记住选择），蓝奏云作为网盘备用。
 
 const GITHUB_RELEASES = "https://github.com/1240444767/starbox-website/releases";
 
@@ -28,6 +28,8 @@ interface ReleaseEntry {
   date?: string;
   /** Release 里的 APK 资产文件名；没有就没有 GitHub 直链 */
   asset?: string;
+  /** 官网自托管的 APK 直接地址（没有 GitHub 资产时使用） */
+  url?: string;
   size?: string;
   lanzou?: string;
   notes: string[];
@@ -50,7 +52,7 @@ function readStoredSource(): string {
         <span class="eyebrow">下载</span>
         <h1>下载星盒工具箱</h1>
         <p class="subtitle">
-          APK 直接托管在 GitHub Releases 上，免费下载，不经过任何第三方应用商店。
+          APK 托管在官网与 GitHub 仓库，免费下载，不经过任何第三方应用商店。
         </p>
       </header>
 
@@ -61,7 +63,7 @@ function readStoredSource(): string {
             <div>
               <h3>星盒工具箱</h3>
               <p>
-                v{{ latest()?.version ?? "2.7.0" }} · 通用 APK
+                v{{ latest()?.version ?? "2.8.0" }} · 通用 APK
                 @if (latest()?.size) { · {{ latest()!.size }} }
               </p>
             </div>
@@ -70,7 +72,7 @@ function readStoredSource(): string {
           <dl class="req">
             <div>
               <dt>最新版本</dt>
-              <dd>v{{ latest()?.version ?? "2.7.0" }}</dd>
+              <dd>v{{ latest()?.version ?? "2.8.0" }}</dd>
             </div>
             @if (latest()?.size) {
               <div><dt>文件大小</dt><dd>{{ latest()!.size }}</dd></div>
@@ -98,21 +100,21 @@ function readStoredSource(): string {
               <span class="src-label">网盘备用</span>
               <div class="pills">
                 <a class="pill cloud" [href]="lanzouUrl()" target="_blank" rel="noopener noreferrer">
-                  蓝奏云 v{{ latest()?.version ?? "2.7.0" }}
+                  蓝奏云 v{{ latest()?.version ?? "2.8.0" }}
                 </a>
               </div>
             </div>
           }
 
           <a class="btn" [href]="downloadHref()" target="_blank" rel="noopener noreferrer">
-            下载 APK v{{ latest()?.version ?? "2.7.0" }}
+            下载 APK v{{ latest()?.version ?? "2.8.0" }}
           </a>
 
           <div class="links">
             <a class="ghost" [href]="GITHUB_RELEASES" target="_blank" rel="noopener noreferrer">
               查看所有版本
             </a>
-            <button class="ghost" type="button" [disabled]="!githubAsset()" (click)="copyLink()">
+            <button class="ghost" type="button" [disabled]="!directUrl()" (click)="copyLink()">
               {{ copied() ? "已复制直链" : "复制直链" }}
             </button>
           </div>
@@ -123,7 +125,7 @@ function readStoredSource(): string {
             <span class="num">1</span>
             <div>
               <h4>下载 APK</h4>
-              <p>点击左侧「下载 APK」按钮；国内网络直连 GitHub 较慢时，先在上方换一条加速线路。</p>
+              <p>点击左侧「下载 APK」按钮，安装包由官网直链提供；速度慢时可稍后重试，或前往官方 GitHub 仓库下载。</p>
             </div>
           </li>
           <li>
@@ -144,7 +146,7 @@ function readStoredSource(): string {
       </div>
 
       <p class="disclaimer">
-        星盒是一款免费的个人开发工具箱，APK 由官方 GitHub Releases 分发，请勿在第三方渠道付费购买。
+        星盒是一款免费的个人开发工具箱，APK 由官网与官方 GitHub 仓库分发，请勿在第三方渠道付费购买。
       </p>
 
       <h2 class="screenshots-title">应用截图</h2>
@@ -659,8 +661,11 @@ export default class DownloadComponent {
   releases = signal<ReleaseEntry[]>([]);
   /** GitHub 资产直链：最新版有 asset 才有 */
   githubAsset = signal<string | null>(null);
-  /** 蓝奏云兜底（releases.json 最新版没配 asset 时的主按钮退路） */
-  private readonly mainUrl = "https://wwbsh.lanzout.com/i8Y8z44265qd";
+  /** 兜底地址（releases.json 读取失败时仍可下载当前版本） */
+  private readonly mainUrl = "/download/starbox-2.8.0.apk";
+
+  /** 最新版 APK 直接地址：GitHub 资产优先，其次官网自托管 */
+  protected readonly directUrl = signal<string | null>(null);
 
   protected readonly sourceId = signal(readStoredSource());
 
@@ -673,8 +678,10 @@ export default class DownloadComponent {
 
   /** 当前线路下的下载地址 */
   protected readonly downloadHref = computed(() => {
+    const direct = this.directUrl();
+    if (!direct) return this.mainUrl;
     const asset = this.githubAsset();
-    if (!asset) return this.mainUrl;
+    if (!asset) return direct;
     const source = this.sources.find((s) => s.id === this.sourceId()) ?? this.sources[0];
     return source.prefix ? source.prefix + asset : asset;
   });
@@ -694,7 +701,11 @@ export default class DownloadComponent {
         this.releases.set(data.releases);
         const latest = data.releases[0];
         if (latest.asset) {
-          this.githubAsset.set(`${GITHUB_RELEASES}/download/${latest.tag}/${latest.asset}`);
+          const assetUrl = `${GITHUB_RELEASES}/download/${latest.tag}/${latest.asset}`;
+          this.githubAsset.set(assetUrl);
+          this.directUrl.set(assetUrl);
+        } else if (latest.url) {
+          this.directUrl.set(latest.url);
         }
       }
     } catch {
@@ -754,6 +765,6 @@ export default class DownloadComponent {
     { q: "Q: 下载后无法安装？", a: '请检查是否开启了「允许安装未知来源应用」权限，可在设置-安全中开启。' },
     { q: "Q: 应用闪退怎么办？", a: "请尝试清除应用缓存或重新下载安装最新版本。" },
     { q: "Q: 如何更新应用？", a: "打开应用会自动检测更新，也可在此页面下载最新版本覆盖安装。" },
-    { q: "Q: GitHub 直连失败？", a: "在「下载线路」里换一条加速线路，或使用「网盘备用」的蓝奏云链接。" },
+    { q: "Q: 下载速度慢或失败？", a: "请稍后重试，或前往官方 GitHub 仓库下载同一安装包。" },
   ];
 }
